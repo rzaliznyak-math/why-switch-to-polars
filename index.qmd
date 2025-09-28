@@ -1,6 +1,6 @@
 ---
 title: "Why I'm Switching to Polars Away From Pandas"
-subtitle: "Polars is Faster"
+subtitle: "Polars is Faster At Everything"
 author: "Russ Zaliznyak <[rzaliznyak@gmail.com](mailto:rzaliznyak@gmail.com)>"
 date: "2025-09-28"
 execute: 
@@ -43,7 +43,7 @@ with open(file_location, "wb") as f:
 #| code-summary: "Pandas read_csv()"
 #| echo: true
 #| code-fold: true
-NUMBER_SIMULATIONS = int(1e3)
+NUMBER_SIMULATIONS = int(1e2)
 import pandas as pd
 
 all_panda_read_times = []
@@ -190,3 +190,110 @@ Write CSVs `{python} f"{speed_increase_mean_write:.2f}"` faster with Polars.
 ::::
 
 
+# Constructors
+
+:::: {.columns style="font-size: 100%;"}
+
+
+::: {.column width="100%;"}
+
+```{python}
+#| code-summary: "dictionary example"
+#| echo: true
+#| code-fold: true
+import numpy as np
+import string
+import random
+
+N = 1_000_000  # 1 million rows
+
+def random_str(n=5):
+    return ''.join(random.choices(string.ascii_letters, k=n))
+
+data = {
+    "id": np.arange(N),
+    "value": np.random.randint(0, 1000, size=N),
+    "flag": np.random.choice([True, False], size=N),
+    "category": np.random.choice(["A", "B", "C", "D"], size=N),
+    "score": np.random.randn(N),
+    "year": np.random.randint(2000, 2025, size=N),
+    "name": [random_str(5) for _ in range(N)],   # random short strings
+    "ratio": np.random.random(size=N),
+    "count": np.random.randint(1, 100, size=N),
+}
+```
+:::
+
+::: {.column width="50%;"}
+
+```{python}
+#| code-summary: "Pandas DataFrame()"
+#| echo: true
+#| code-fold: true
+import pandas as pd
+
+all_panda_constructor_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    df_pandas = pd.DataFrame.from_dict(data)
+    all_panda_constructor_times.append(default_timer())
+
+all_panda_constructor_times = diff(all_panda_constructor_times)
+panda_constructor_mean_time = mean(all_panda_constructor_times)
+
+```
+
+:::
+
+
+::: {.column width="50%;"}
+
+```{python}
+#| code-summary: "Polars DataFrame()"
+#| echo: true
+#| code-fold: true
+import polars as pol
+
+all_polar_constructor_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    df_polars = pl.DataFrame(data)
+    all_polar_constructor_times.append(default_timer())
+
+all_polar_constructor_times = diff(all_polar_constructor_times)
+polar_constructor_mean_time = mean(all_polar_constructor_times)
+
+```
+
+:::
+
+
+
+::: {.column width="50%;"}
+
+
+```{python}
+#| code-summary: "Constructor Comparison"
+#| echo: false
+#| code-fold: true
+index_samples_constructor = array(all_polar_constructor_times)/array(all_panda_constructor_times)
+speed_increase_mean_constructor = mean(index_samples_constructor)
+
+fig = ff.create_distplot(
+    [index_samples_constructor],
+    group_labels=["index_samples"],  
+    show_hist=False,              
+    show_rug=False,          
+)
+
+fig.update_layout(showlegend=False)
+fig.show()
+
+
+```
+
+<br>
+
+Construct DataFrames `{python} f"{speed_increase_mean_constructor:.2f}"` faster with Polars.
+
+:::
+
+::::
