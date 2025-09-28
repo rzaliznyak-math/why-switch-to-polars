@@ -15,12 +15,11 @@ format:
 # Introduction
 
 
-# Download A Dataset to Local
+### Download a CSV Example
 ```{python}
 #| echo: true
-#| code-fold: show
-from numpy.random import binomial
-from numpy import mean
+#| code-fold: true
+from numpy import mean, diff, array
 from timeit import default_timer
 import requests
 
@@ -33,75 +32,68 @@ with open(file_location, "wb") as f:
 ```
 
 
-## Read in CSV with Pandas
+# Reading in CSVs
+
+
+:::: {.columns style="font-size: 100%;"}
+
+::: {.column width="50%;"}
+
 ```{python}
+#| code-summary: "Pandas"
 #| echo: true
-#| code-fold: show
-NUMBER_SIMULATIONS = int(1e4)
+#| code-fold: true
+NUMBER_SIMULATIONS = int(1e2)
 import pandas as pd
 
 all_panda_read_times = []
+start = default_timer()
 for j in range(NUMBER_SIMULATIONS):
-
-    start = default_timer()
     df_pandas = pd.read_csv(file_location)
+    all_panda_read_times.append(default_timer())
 
-    all_panda_read_times.append(default_timer() - start)
-
+all_panda_read_times = array(
+    [all_panda_read_times[1] - start]
+    + list(diff(all_panda_read_times))
+)
 panda_mean_run_time = mean(all_panda_read_times)
-print(f"panda mean run-time is {panda_mean_run_time:.4f} secs")
-
-
-
-```
-
-
-## Read in CSV with Polars
-```{python}
-#| echo: true
-#| code-fold: show
-import polars as pl
-
-all_polars_read_times = []
-for j in range(NUMBER_SIMULATIONS):
-
-    start = default_timer()
-    df_polars =pl.read_csv(file_location)
-
-    all_polars_read_times.append(default_timer() - start)
-
-polars_mean_run_time = mean(all_polars_read_times)
-print(f"polars mean run-time is {polars_mean_run_time:.4f} secs")
-
-```
-
-
-## Average Read Speed Improvement
-
-```{python}
-#| code-summary: "Code for Comparison of Read-times"
-#| echo: true
-#| code-fold: true
-
-from numpy import array
-import plotly.figure_factory as ff
-
-index_samples = array(all_panda_read_times)/array(all_polars_read_times)
-speed_increase_mean = mean(index_samples)
-
-fig = ff.create_distplot(
-    [index_samples],
-    group_labels=["index_samples"],  
-    show_hist=False,              
-    show_rug=False,          
+print(
+    f"panda mean run-time is {panda_mean_run_time:.4f} secs"
 )
 
-fig.update_layout(showlegend=False)
-fig.show()
+
+```
+
+:::
+
+
+::: {.column width="50%;"}
+
+```{python}
+#| code-summary: "Pandas"
+#| echo: true
+#| code-fold: true
+NUMBER_SIMULATIONS = int(1e2)
+import polars as pl
+
+all_polar_read_times = []
+start = default_timer()
+for j in range(NUMBER_SIMULATIONS):
+    df_polars =pl.read_csv(file_location)
+    all_polar_read_times.append(default_timer())
+
+all_polar_read_times = array(
+    [all_polar_read_times[1] - start]
+    + list(diff(all_polar_read_times))
+)
+polar_mean_run_time = mean(all_polar_read_times)
+print(
+    f"polar mean run-time is {polar_mean_run_time:.4f} secs"
+)
 
 
 ```
 
-<br>
+:::
 
-On average, we can read CSVs `{python} f"{speed_increase_mean:.2f}"` faster with Polars.
+::::
