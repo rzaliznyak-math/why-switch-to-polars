@@ -37,7 +37,7 @@ with open(file_location, "wb") as f:
 ```{python}
 #| echo: true
 #| code-fold: show
-NUMBER_SIMULATIONS = int(1e3)
+NUMBER_SIMULATIONS = int(1e4)
 import pandas as pd
 
 all_panda_read_times = []
@@ -71,7 +71,7 @@ for j in range(NUMBER_SIMULATIONS):
     all_polars_read_times.append(default_timer() - start)
 
 polars_mean_run_time = mean(all_polars_read_times)
-
+print(f"polars mean run-time is {polars_mean_run_time:.4f} secs")
 
 ```
 
