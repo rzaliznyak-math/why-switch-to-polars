@@ -32,7 +32,7 @@ with open(file_location, "wb") as f:
 ```
 
 
-# Reading in CSVs
+# Read & Write CSVs
 
 
 :::: {.columns style="font-size: 100%;"}
@@ -40,26 +40,62 @@ with open(file_location, "wb") as f:
 ::: {.column width="50%;"}
 
 ```{python}
-#| code-summary: "Pandas"
+#| code-summary: "Pandas read_csv()"
 #| echo: true
 #| code-fold: true
-NUMBER_SIMULATIONS = int(1e2)
+NUMBER_SIMULATIONS = int(1e3)
 import pandas as pd
 
 all_panda_read_times = []
-start = default_timer()
+all_panda_read_times = [default_timer()]
 for j in range(NUMBER_SIMULATIONS):
     df_pandas = pd.read_csv(file_location)
     all_panda_read_times.append(default_timer())
 
-all_panda_read_times = array(
-    [all_panda_read_times[1] - start]
-    + list(diff(all_panda_read_times))
-)
+all_panda_read_times = diff(all_panda_read_times)
+
 panda_mean_run_time = mean(all_panda_read_times)
-print(
-    f"panda mean run-time is {panda_mean_run_time:.4f} secs"
-)
+```
+
+:::
+
+
+::: {.column width="50%;"}
+
+```{python}
+#| code-summary: "Polars read_csv()"
+#| echo: true
+#| code-fold: true
+import polars as pl
+
+all_polar_read_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    df_polars =pl.read_csv(file_location)
+    all_polar_read_times.append(default_timer())
+
+all_polar_read_times = diff(all_polar_read_times)
+polar_mean_run_time = mean(all_polar_read_times)
+
+```
+
+:::
+
+
+::: {.column width="50%;"}
+
+```{python}
+#| code-summary: "Pandas to_csv()"
+#| echo: true
+#| code-fold: true
+import pandas as pd
+
+all_panda_write_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    df_pandas.to_csv("temp.csv")
+    all_panda_write_times.append(default_timer())
+
+all_panda_write_times = diff(all_panda_write_times)
+panda_mean_write_time = mean(all_panda_write_times)
 
 
 ```
@@ -70,30 +106,87 @@ print(
 ::: {.column width="50%;"}
 
 ```{python}
-#| code-summary: "Pandas"
+#| code-summary: "Polars write_csv()"
 #| echo: true
 #| code-fold: true
-NUMBER_SIMULATIONS = int(1e2)
 import polars as pl
 
-all_polar_read_times = []
-start = default_timer()
+all_polar_write_times = [default_timer()]
 for j in range(NUMBER_SIMULATIONS):
-    df_polars =pl.read_csv(file_location)
-    all_polar_read_times.append(default_timer())
+    df_polars.write_csv("temp.csv")
+    all_polar_write_times.append(default_timer())
 
-all_polar_read_times = array(
-    [all_polar_read_times[1] - start]
-    + list(diff(all_polar_read_times))
-)
-polar_mean_run_time = mean(all_polar_read_times)
-print(
-    f"polar mean run-time is {polar_mean_run_time:.4f} secs"
-)
-
+all_polar_write_times = diff(all_polar_write_times)
+polar_write_run_time = mean(all_polar_write_times)
 
 ```
 
 :::
 
+
+::: {.column width="50%;"}
+
+
+```{python}
+#| code-summary: "Read Comparison"
+#| echo: false
+#| code-fold: true
+
+from numpy import array
+import plotly.figure_factory as ff
+
+index_samples = array(all_panda_read_times)/array(all_polar_read_times)
+speed_increase_mean = mean(index_samples)
+
+fig = ff.create_distplot(
+    [index_samples],
+    group_labels=["index_samples"],  
+    show_hist=False,              
+    show_rug=False,          
+)
+
+fig.update_layout(showlegend=False)
+fig.show()
+
+
+```
+
+<br>
+
+Read CSVs `{python} f"{speed_increase_mean:.2f}"` faster with Polars.
+
+:::
+
+
+::: {.column width="50%;"}
+
+
+```{python}
+#| code-summary: "Write Comparison"
+#| echo: false
+#| code-fold: true
+index_samples_write = array(all_panda_write_times)/array(all_polar_write_times)
+speed_increase_mean_write = mean(index_samples_write)
+
+fig = ff.create_distplot(
+    [index_samples_write],
+    group_labels=["index_samples"],  
+    show_hist=False,              
+    show_rug=False,          
+)
+
+fig.update_layout(showlegend=False)
+fig.show()
+
+
+```
+
+<br>
+
+Write CSVs `{python} f"{speed_increase_mean_write:.2f}"` faster with Polars.
+
+:::
+
 ::::
+
+
