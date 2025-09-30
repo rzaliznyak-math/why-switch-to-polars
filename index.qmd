@@ -1,6 +1,6 @@
 ---
 title: "Why I'm Switching to Polars Away From Pandas"
-subtitle: "Polars is Faster At Everything"
+subtitle: "Benchmarking Polars vs Pandas"
 author: "Russ Zaliznyak <[rzaliznyak@gmail.com](mailto:rzaliznyak@gmail.com)>"
 date: "2025-09-28"
 execute: 
@@ -14,12 +14,18 @@ format:
 
 # Introduction
 
+I build tools that analyze large datasets, but as load and analysis times grow, performance bottlenecks make them less usable and harder to scale. To store and analyze these datasets efficiently, I use DataFrames, whose table-like structure makes cleaning, transforming, and exploring data simple and intuitive.
 
-### Download a CSV Example
+Below are Benchmarks of Pandas vs Polars Performance.
+
+# Read | Write 
+
+[Download **10 mb file**: https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/csv/10mb.csv](https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/csv/10mb.csv){target=_blank}
+
 ```{python}
-#| echo: true
-#| code-fold: true
-from numpy import mean, diff, array
+#| echo: false
+#| code-fold: false
+from numpy import mean, diff, array,std,percentile
 from timeit import default_timer
 import requests
 
@@ -32,18 +38,13 @@ with open(file_location, "wb") as f:
 ```
 
 
-# Read & Write CSVs
 
-
-:::: {.columns style="font-size: 100%;"}
-
-::: {.column width="50%;"}
 
 ```{python}
 #| code-summary: "Pandas read_csv()"
-#| echo: true
-#| code-fold: true
-NUMBER_SIMULATIONS = int(1e2)
+#| echo: false
+#| code-fold: false
+NUMBER_SIMULATIONS = int(1e3)
 import pandas as pd
 
 all_panda_read_times = []
@@ -57,15 +58,10 @@ all_panda_read_times = diff(all_panda_read_times)
 panda_mean_run_time = mean(all_panda_read_times)
 ```
 
-:::
-
-
-::: {.column width="50%;"}
-
 ```{python}
 #| code-summary: "Polars read_csv()"
-#| echo: true
-#| code-fold: true
+#| echo: false
+#| code-fold: false
 import polars as pl
 
 all_polar_read_times = [default_timer()]
@@ -78,15 +74,10 @@ polar_mean_run_time = mean(all_polar_read_times)
 
 ```
 
-:::
-
-
-::: {.column width="50%;"}
-
 ```{python}
 #| code-summary: "Pandas to_csv()"
-#| echo: true
-#| code-fold: true
+#| echo: false
+#| code-fold: false
 import pandas as pd
 
 all_panda_write_times = [default_timer()]
@@ -100,15 +91,10 @@ panda_mean_write_time = mean(all_panda_write_times)
 
 ```
 
-:::
-
-
-::: {.column width="50%;"}
-
 ```{python}
 #| code-summary: "Polars write_csv()"
-#| echo: true
-#| code-fold: true
+#| echo: false
+#| code-fold: false
 import polars as pl
 
 all_polar_write_times = [default_timer()]
@@ -121,22 +107,18 @@ polar_write_run_time = mean(all_polar_write_times)
 
 ```
 
-:::
-
-
-::: {.column width="50%;"}
-
 
 ```{python}
 #| code-summary: "Read Comparison"
 #| echo: false
-#| code-fold: true
+#| code-fold: false
 
 from numpy import array
 import plotly.figure_factory as ff
 
 index_samples = array(all_panda_read_times)/array(all_polar_read_times)
 speed_increase_mean = mean(index_samples)
+speed_increase_std = std(index_samples)
 
 fig = ff.create_distplot(
     [index_samples],
@@ -145,20 +127,14 @@ fig = ff.create_distplot(
     show_rug=False,          
 )
 
-fig.update_layout(showlegend=False)
-fig.show()
+fig.update_layout(showlegend=False,height = 300)
+pass
+#fig.show()
 
 
 ```
 
-<br>
 
-Read CSVs `{python} f"{speed_increase_mean:.2f}"` faster with Polars.
-
-:::
-
-
-::: {.column width="50%;"}
 
 
 ```{python}
@@ -167,6 +143,7 @@ Read CSVs `{python} f"{speed_increase_mean:.2f}"` faster with Polars.
 #| code-fold: true
 index_samples_write = array(all_panda_write_times)/array(all_polar_write_times)
 speed_increase_mean_write = mean(index_samples_write)
+speed_increase_std_write = std(index_samples_write)
 
 fig = ff.create_distplot(
     [index_samples_write],
@@ -175,37 +152,32 @@ fig = ff.create_distplot(
     show_rug=False,          
 )
 
-fig.update_layout(showlegend=False)
-fig.show()
+fig.update_layout(showlegend=False, height = 300)
+pass
+#fig.show()
 
 
 ```
 
-<br>
-
-Write CSVs `{python} f"{speed_increase_mean_write:.2f}"` faster with Polars.
-
-:::
-
-::::
+| Metric       | Mean Speed Increase | Std Speed Increase |
+|--------------|---------------------|--------------------|
+| Read         | `{python} f"{speed_increase_mean:.2f}"`         | `{python} f"{speed_increase_std:.2f}"`          |
+| Write        | `{python} f"{speed_increase_mean_write:.2f}"`   | `{python} f"{speed_increase_std_write:.2f}"`    |
 
 
-# Constructors
-
-:::: {.columns style="font-size: 100%;"}
 
 
-::: {.column width="100%;"}
+# Construct | Pivot
 
 ```{python}
-#| code-summary: "dictionary example"
+#| code-summary: "Simulate Dataset"
 #| echo: true
 #| code-fold: true
 import numpy as np
 import string
 import random
 
-N = 1_000_000  # 1 million rows
+N = int(1e6)  # 1 million rows
 
 def random_str(n=5):
     return ''.join(random.choices(string.ascii_letters, k=n))
@@ -222,14 +194,12 @@ data = {
     "count": np.random.randint(1, 100, size=N),
 }
 ```
-:::
 
-::: {.column width="50%;"}
 
 ```{python}
 #| code-summary: "Pandas DataFrame()"
-#| echo: true
-#| code-fold: true
+#| echo: false
+#| code-fold: false
 import pandas as pd
 
 all_panda_constructor_times = [default_timer()]
@@ -242,15 +212,11 @@ panda_constructor_mean_time = mean(all_panda_constructor_times)
 
 ```
 
-:::
-
-
-::: {.column width="50%;"}
 
 ```{python}
 #| code-summary: "Polars DataFrame()"
-#| echo: true
-#| code-fold: true
+#| echo: false
+#| code-fold: false
 import polars as pol
 
 all_polar_constructor_times = [default_timer()]
@@ -263,19 +229,15 @@ polar_constructor_mean_time = mean(all_polar_constructor_times)
 
 ```
 
-:::
-
-
-
-::: {.column width="50%;"}
 
 
 ```{python}
 #| code-summary: "Constructor Comparison"
 #| echo: false
-#| code-fold: true
+#| code-fold: false
 index_samples_constructor = array(all_polar_constructor_times)/array(all_panda_constructor_times)
 speed_increase_mean_constructor = mean(index_samples_constructor)
+speed_increase_std_constructor = std(index_samples_constructor)
 
 fig = ff.create_distplot(
     [index_samples_constructor],
@@ -284,16 +246,307 @@ fig = ff.create_distplot(
     show_rug=False,          
 )
 
-fig.update_layout(showlegend=False)
-fig.show()
+fig.update_layout(showlegend=False,height = 300)
+#fig.show()
+pass
 
 
 ```
 
-<br>
 
-Construct DataFrames `{python} f"{speed_increase_mean_constructor:.2f}"` faster with Polars.
 
-:::
 
-::::
+```{python}
+#| code-summary: "Pandas group_by()"
+#| echo: false
+#| code-fold: false
+import pandas as pd
+
+all_panda_groupby_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result = (
+    df_pandas.groupby("category")
+      .agg(
+          count=("score", "size"),   # count(*) number of rows
+          avg_score=("score", "mean")
+      )
+      .reset_index()
+)
+    all_panda_groupby_times.append(default_timer())
+
+all_panda_groupby_times = diff(all_panda_groupby_times)
+panda_groupby_mean_time = mean(all_panda_groupby_times)
+
+```
+
+
+
+
+```{python}
+#| code-summary: "Polars group_by()"
+#| echo: false
+#| code-fold: false
+import polars as pl
+
+all_polar_groupby_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result_polars = (
+    df_polars.group_by("category")
+      .agg([
+          pl.len().alias("count"),         # count(*) number of rows
+          pl.col("score").mean().alias("avg_score")
+      ])
+)
+    all_polar_groupby_times.append(default_timer())
+
+all_polar_groupby_times = diff(all_polar_groupby_times)
+polar_groupby_mean_time = mean(all_polar_groupby_times)
+
+```
+
+
+
+
+```{python}
+#| code-summary: "GroupBy Comparison"
+#| echo: false
+#| code-fold: false
+index_samples_groupby = array(all_panda_groupby_times)/array(all_polar_groupby_times)
+speed_increase_mean_groupby = mean(index_samples_groupby)
+speed_increase_std_groupby = std(index_samples_groupby)
+
+fig = ff.create_distplot(
+    [index_samples_groupby],
+    group_labels=["index_samples"],  
+    show_hist=False,              
+    show_rug=False,          
+)
+
+fig.update_layout(showlegend=False,height = 300)
+#fig.show()
+pass
+
+```
+
+
+| Metric       | Mean Speed Increase | Std Speed Increase |
+|--------------|---------------------|--------------------|
+| Constructor  | `{python} f"{speed_increase_mean_constructor:.2f}"` | `{python} f"{speed_increase_std_constructor:.2f}"` |
+| Group By         | `{python} f"{speed_increase_mean_groupby:.2f}"`         | `{python} f"{speed_increase_std_groupby:.2f}"`          |
+
+
+
+# Joins | Filter
+
+
+
+
+
+
+
+
+
+
+
+```{python}
+#| code-summary: "Pandas inner join"
+#| echo: false
+#| code-fold: false
+import pandas as pd
+
+
+all_panda_join_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result_join = result.merge(result, on="category", how="inner")
+    all_panda_join_times.append(default_timer())
+
+all_panda_join_times = diff(all_panda_join_times)
+panda_join_mean_time = mean(all_panda_join_times)
+
+```
+
+
+
+
+```{python}
+#| code-summary: "Polars Inner Join"
+#| echo: false
+#| code-fold: false
+import polars as pl
+
+all_polar_join_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result_polars_join = result_polars.join(result_polars, on="category", how="inner")
+    all_polar_join_times.append(default_timer())
+
+all_polar_join_times = diff(all_polar_join_times)
+polar_join_mean_time = mean(all_polar_join_times)
+
+```
+
+
+
+
+
+```{python}
+#| code-summary: "Inner Join Comparison"
+#| echo: false
+#| code-fold: false
+index_samples_join = array(all_panda_join_times) / array(all_polar_join_times)
+speed_increase_mean_join = mean(index_samples_join)
+speed_increase_std_join = std(index_samples_join)
+
+fig = ff.create_distplot(
+    [index_samples_join],
+    group_labels=["index_samples"],
+    show_hist=False,
+    show_rug=False,
+)
+
+fig.update_layout(showlegend=False, height=300)
+pass
+#fig.show()
+
+```
+
+
+
+
+
+
+```{python}
+#| code-summary: "Pandas union"
+#| echo: false
+#| code-fold: false
+import pandas as pd
+
+
+all_panda_union_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result_union = pd.concat([result, result], ignore_index=True)
+    all_panda_union_times.append(default_timer())
+
+all_panda_union_times = diff(all_panda_union_times)
+panda_union_mean_time = mean(all_panda_union_times)
+
+```
+
+
+
+
+```{python}
+#| code-summary: "Polars Inner Join"
+#| echo: false
+#| code-fold: false
+import polars as pl
+
+all_polar_union_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result_polars_union = pl.concat([result_polars, result_polars])
+    all_polar_union_times.append(default_timer())
+
+all_polar_union_times = diff(all_polar_union_times)
+polar_union_mean_time = mean(all_polar_union_times)
+
+```
+
+
+
+
+```{python}
+#| code-summary: "Calc Comparison"
+#| echo: false
+#| code-fold: false
+index_samples_union = array(all_panda_union_times) / array(all_polar_union_times)
+speed_increase_mean_union = mean(index_samples_union)
+speed_increase_std_union = std(index_samples_union)
+
+fig = ff.create_distplot(
+    [index_samples_union],
+    group_labels=["index_samples"],
+    show_hist=False,
+    show_rug=False,
+)
+
+fig.update_layout(showlegend=False, height=300)
+#fig.show()
+pass
+```
+
+
+
+
+
+
+```{python}
+#| code-summary: "Pandas Data Filtering"
+#| echo: false
+#| code-fold: false
+import pandas as pd
+
+
+all_panda_filter_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+    result_filter = result[(result["avg_score"] > 10) | (result["count"] < 3)]
+    all_panda_filter_times.append(default_timer())
+
+all_panda_filter_times = diff(all_panda_filter_times)
+panda_filter_mean_time = mean(all_panda_filter_times)
+
+```
+
+
+
+
+```{python}
+#| code-summary: "Polars Data Filtering"
+#| echo: false
+#| code-fold: false
+import polars as pl
+
+all_polar_filter_times = [default_timer()]
+for j in range(NUMBER_SIMULATIONS):
+
+
+    result_polars_filter = result_polars.filter(
+    (pl.col("avg_score") > 10) | (pl.col("count") < 3)
+)
+    all_polar_filter_times.append(default_timer())
+
+all_polar_filter_times = diff(all_polar_filter_times)
+polar_filter_mean_time = mean(all_polar_filter_times)
+
+```
+
+
+
+
+
+```{python}
+#| code-summary: "filter Comparison"
+#| echo: false
+#| code-fold: true
+index_samples_filter = array(all_panda_filter_times) / array(all_polar_filter_times)
+speed_increase_mean_filter = mean(index_samples_filter)
+speed_increase_std_filter = std(index_samples_filter)
+
+fig = ff.create_distplot(
+    [index_samples_filter],
+    group_labels=["index_samples"],
+    show_hist=False,
+    show_rug=False,
+)
+
+fig.update_layout(showlegend=False, height=300)
+pass
+#fig.show()
+
+```
+
+
+
+| Metric       | Mean Speed Increase | Std Speed Increase |
+|--------------|---------------------|--------------------|
+| Inner Join        | `{python} f"{speed_increase_mean_join:.2f}"`   | `{python} f"{speed_increase_std_join:.2f}"`    |
+| Union All  | `{python} f"{speed_increase_mean_union:.2f}"` | `{python} f"{speed_increase_std_union:.2f}"` |
+| Filter  | `{python} f"{speed_increase_mean_filter:.2f}"` | `{python} f"{speed_increase_std_filter:.2f}"` |
