@@ -14,9 +14,8 @@ format:
 
 # Introduction
 
-I build tools that analyze large datasets, but as load and analysis times grow, performance bottlenecks make them less usable and harder to scale. To store and analyze these datasets efficiently, I use DataFrames, whose table-like structure makes cleaning, transforming, and exploring data simple and intuitive.
+Data scientists use `DataFrames` to store datasets for analysis, but as load and analysis times grow, performance bottlenecks make them less usable and harder to scale. To store and analyze these datasets efficiently, I explored `Polars` vs `Pandas`, which both use table-like structure to make cleaning, transforming, and exploring data simple. 
 
-Below are Benchmarks of Pandas vs Polars Performance.
 
 # Read | Write 
 
@@ -44,7 +43,7 @@ with open(file_location, "wb") as f:
 #| code-summary: "Pandas read_csv()"
 #| echo: false
 #| code-fold: false
-NUMBER_SIMULATIONS = int(1e3)
+NUMBER_SIMULATIONS = int(5e3)
 import pandas as pd
 
 all_panda_read_times = []
@@ -177,7 +176,7 @@ import numpy as np
 import string
 import random
 
-N = int(1e6)  # 1 million rows
+N = int(5e6)
 
 def random_str(n=5):
     return ''.join(random.choices(string.ascii_letters, k=n))
