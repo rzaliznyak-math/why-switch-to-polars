@@ -2,7 +2,7 @@
 title: "Why I'm Switching to Polars Away From Pandas"
 subtitle: "Benchmarking Polars vs Pandas"
 author: "Russ Zaliznyak <[rzaliznyak@gmail.com](mailto:rzaliznyak@gmail.com)>"
-date: "2025-09-28"
+date: "2025-10-14"
 execute: 
   echo: false
 format: 
@@ -14,7 +14,23 @@ format:
 
 # Introduction
 
-Data scientists use `DataFrames` to store datasets for analysis, but as load and analysis times grow, performance bottlenecks make them less usable and harder to scale. To store and analyze these datasets efficiently, I explored `Polars` vs `Pandas`, which both use table-like structure to make cleaning, transforming, and exploring data simple. 
+Data scientists have long relied on Pandas for handling tabular data, but as datasets grow, its single-threaded design and memory overhead start to limit performance. Tasks that once took seconds can now take minutes, making large-scale analysis cumbersome.
+
+That’s what led me to explore Polars — a Rust-based, multi-threaded DataFrame library built on Apache Arrow. It promises faster computation and better scalability out of the box. To see how it performs in practice, I benchmarked Polars against Pandas on common data operations. The results convinced me it’s time to switch.
+
+
+::: {.callout-note collapse="true" title="System & Environment"}
+- All benchmarks were run on a **16-inch MacBook Pro (2021)** equipped with an **Apple M1 Max** chip and **64 GB of unified memory**, running **macOS Sonoma 14.7**.  <br><br>
+- Tests used **Python 3.10.9**, with **Pandas 1.5.3** and **Polars 1.33.0** installed.
+:::
+
+
+::: {.callout-note collapse="true" title="Methodology"}
+I benchmarked **Polars** and **Pandas** across common DataFrame operations using both real and simulated data. <br><br>
+- For **read** and **write** tests, I used a **10 MB CSV dataset** from the [Frictionless Data repository](https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/csv/10mb.csv).  <br>
+- For **constructor**, **pivot**, **join**, and **filter** benchmarks, I generated a **simulated dataset** to ensure consistent structure and reproducibility.  <br>
+- Each operation was executed **5,000 times** per library, and the **mean execution time** was recorded.  
+:::
 
 
 # Read | Write 
@@ -134,8 +150,6 @@ pass
 ```
 
 
-
-
 ```{python}
 #| code-summary: "Write Comparison"
 #| echo: false
@@ -158,13 +172,13 @@ pass
 
 ```
 
-| Metric       | Mean Speed Increase | Std Speed Increase |
+| Metric       | Mean Speed Increase | Standard Error |
 |--------------|---------------------|--------------------|
-| Read         | `{python} f"{speed_increase_mean:.2f}"`         | `{python} f"{speed_increase_std:.2f}"`          |
-| Write        | `{python} f"{speed_increase_mean_write:.2f}"`   | `{python} f"{speed_increase_std_write:.2f}"`    |
+| Read         | `{python} f"{speed_increase_mean:.2f}"`         | `{python} f"{speed_increase_std/NUMBER_SIMULATIONS**0.5:.2f}"`          |
+| Write        | `{python} f"{speed_increase_mean_write:.2f}"`   | `{python} f"{speed_increase_std_write/NUMBER_SIMULATIONS**0.5:.2f}"`    |
 
 
-
+**Summary**: Polars can read and write CSVs many times faster than Pandas while using less memory and CPU per operation, making it ideal for medium-to-large datasets or repeated batch processing.
 
 # Construct | Pivot
 
@@ -328,11 +342,14 @@ pass
 ```
 
 
-| Metric       | Mean Speed Increase | Std Speed Increase |
+| Metric       | Mean Speed Increase | Standard Error |
 |--------------|---------------------|--------------------|
-| Constructor  | `{python} f"{speed_increase_mean_constructor:.2f}"` | `{python} f"{speed_increase_std_constructor:.2f}"` |
-| Group By         | `{python} f"{speed_increase_mean_groupby:.2f}"`         | `{python} f"{speed_increase_std_groupby:.2f}"`          |
+| Constructor  | `{python} f"{speed_increase_mean_constructor:.2f}"` | `{python} f"{speed_increase_std_constructor/NUMBER_SIMULATIONS**0.5:.2f}"` |
+| Group By         | `{python} f"{speed_increase_mean_groupby:.2f}"`         | `{python} f"{speed_increase_std_groupby/NUMBER_SIMULATIONS**0.5:.2f}"`          |
 
+
+
+**Summary**: Polars constructs and reshapes large datasets more quickly and efficiently by taking full advantage of multi-core CPUs and low-level optimizations that Pandas lacks
 
 
 # Joins | Filter
@@ -544,8 +561,32 @@ pass
 
 
 
-| Metric       | Mean Speed Increase | Std Speed Increase |
+| Metric       | Mean Speed Increase | Standard Error |
 |--------------|---------------------|--------------------|
-| Inner Join        | `{python} f"{speed_increase_mean_join:.2f}"`   | `{python} f"{speed_increase_std_join:.2f}"`    |
-| Union All  | `{python} f"{speed_increase_mean_union:.2f}"` | `{python} f"{speed_increase_std_union:.2f}"` |
-| Filter  | `{python} f"{speed_increase_mean_filter:.2f}"` | `{python} f"{speed_increase_std_filter:.2f}"` |
+| Inner Join        | `{python} f"{speed_increase_mean_join:.2f}"`   | `{python} f"{speed_increase_std_join/NUMBER_SIMULATIONS**0.5:.2f}"`    |
+| Union All  | `{python} f"{speed_increase_mean_union:.2f}"` | `{python} f"{speed_increase_std_union/NUMBER_SIMULATIONS**0.5:.2f}"` |
+| Filter  | `{python} f"{speed_increase_mean_filter:.2f}"` | `{python} f"{speed_increase_std_filter/NUMBER_SIMULATIONS**0.5:.2f}"` |
+
+<br>
+
+**Summary**: Polars handles joins and filters faster and more efficiently by parallelizing work and minimizing Python-level overhead — making it ideal for high-volume or complex data transformations.
+
+# Conclusion
+
+As a data scientist, my goal is to explore and transform data quickly without fighting performance limits. Polars delivers that speed and efficiency out of the box — it loads data faster, executes transformations in parallel, and scales as datasets grow.
+
+While Pandas remains great for lightweight analysis, Polars is simply better suited for large-scale workflows where time and memory efficiency matter. After benchmarking both, I’m convinced: Polars lets me spend less time waiting and more time analyzing.
+
+# Code Comparisons
+
+::: {.table-responsive}
+| Operation | **Pandas Example** | **Polars Example** |
+|------------|--------------------|--------------------|
+| **Read CSV** | `df = pd.read_csv("data.csv")` | `df = pl.read_csv("data.csv")` |
+| **Write CSV** | `df.to_csv("out.csv")` | `df.write_csv("out.csv")` |
+| **Constructor** | `df = pd.DataFrame(data)` | `df = pl.DataFrame(data)` |
+| **Group By** | `df.groupby("col")["value"].mean()` | `df.groupby("col").agg(pl.col("value").mean())` |
+| **Inner Join** | `df1.merge(df2, on="id", how="inner")` | `df1.join(df2, on="id", how="inner")` |
+| **Union All** | `pd.concat([df1, df2], ignore_index=True)` | `df1.vstack(df2)` |
+| **Filter** | `df[df["value"] > 10]` | `df.filter(pl.col("value") > 10)` |
+:::
