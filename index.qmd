@@ -13,16 +13,19 @@ format:
 ---
 
 
+
+```{python}
+NUMBER_SIMULATIONS = int(2e3)
+```
+
 <img src="./assets/rose.png"  style="max-width: 80%; border: 1px solid #aaa; border-radius: 4px;" />
 
-# TL/DR
+# TL/DR;
 
 If you use **`Pandas`** dataframes to store and analyze large datasets, consider making a change to **`Polars`**.
 
 I use _dataframes_ because they allow me to think relationally --- just like I do when I write SQL.
 I use them extensively in virtually all of my work; app development, exploratory data analysis, and summarizing large datasets.
-
-My colleague Joseph Powers, PhD, introduced me to **`Polars`** --- claiming it offers big runtime savings over **`Pandas`**. I scoffed, but soon enough, processing pandas DFs became such a bottleneck that I had no choice but to switch.
 
 Check out below the benchmarks I measured for typical dataframe operations like read, write, construct, and group by. These will convince you that a change is necessary.
 
@@ -38,7 +41,7 @@ Check out below the benchmarks I measured for typical dataframe operations like 
 I benchmarked **Polars** and **Pandas** across common DataFrame operations using both real and simulated data. <br><br>
 - For **read** and **write** tests, I used a **10 MB CSV dataset** from the [Frictionless Data repository](https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/csv/10mb.csv).  <br>
 - For **constructor**, **pivot**, **join**, and **filter** benchmarks, I generated a **simulated dataset** to ensure consistent structure and reproducibility.  <br>
-- Each operation was executed **1,000 times** per library, and the **mean execution time** was recorded.  
+- Each operation was executed **`{python} f"{NUMBER_SIMULATIONS:,}"` times** per library, and the **mean execution time** was recorded.  
 :::
 
 
@@ -68,7 +71,6 @@ with open(file_location, "wb") as f:
 #| code-summary: "Pandas read_csv()"
 #| echo: false
 #| code-fold: false
-NUMBER_SIMULATIONS = int(1e1)
 import pandas as pd
 
 all_panda_read_times = []

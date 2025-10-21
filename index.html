@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">TL/DR</a></li>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">TL/DR;</a></li>
   <li><a href="#read-write" id="toc-read-write" class="nav-link" data-scroll-target="#read-write">Read | Write</a></li>
   <li><a href="#construct-pivot" id="toc-construct-pivot" class="nav-link" data-scroll-target="#construct-pivot">Construct | Pivot</a></li>
   <li><a href="#joins-filter" id="toc-joins-filter" class="nav-link" data-scroll-target="#joins-filter">Joins | Filter</a></li>
@@ -126,7 +126,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p><img src="./assets/rose.png" style="max-width: 80%; border: 1px solid #aaa; border-radius: 4px;"></p>
 <section id="tldr" class="level1">
-<h1>TL/DR</h1>
+<h1>TL/DR;</h1>
 <p>If you use <strong><code>Pandas</code></strong> dataframes to store and analyze large datasets, consider making a change to <strong><code>Polars</code></strong>.</p>
 <p>I use <em>dataframes</em> because they allow me to think relationally — just like I do when I write SQL. I use them extensively in virtually all of my work; app development, exploratory data analysis, and summarizing large datasets.</p>
 <p>My colleague Joseph Powers, PhD, introduced me to <strong><code>Polars</code></strong> — claiming it offers big runtime savings over <strong><code>Pandas</code></strong>. I scoffed, but soon enough, processing pandas DFs became such a bottleneck that I had no choice but to switch.</p>
@@ -181,13 +181,13 @@ Methodology
 <tbody>
 <tr class="odd">
 <td>Read</td>
-<td>16.35</td>
-<td>5.61</td>
+<td>17.81</td>
+<td>2.23</td>
 </tr>
 <tr class="even">
 <td>Write</td>
-<td>31.49</td>
-<td>5.98</td>
+<td>32.04</td>
+<td>4.43</td>
 </tr>
 </tbody>
 </table>
@@ -210,7 +210,7 @@ AI Generated Summary
 </section>
 <section id="construct-pivot" class="level1">
 <h1>Construct | Pivot</h1>
-<div id="ef5d6594" class="cell" data-execution_count="8">
+<div id="91849850" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Simulate Dataset</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -246,13 +246,13 @@ AI Generated Summary
 <tbody>
 <tr class="odd">
 <td>Constructor</td>
-<td>3.36</td>
-<td>0.09</td>
+<td>3.43</td>
+<td>0.33</td>
 </tr>
 <tr class="even">
 <td>Group By</td>
-<td>10.64</td>
-<td>1.21</td>
+<td>10.58</td>
+<td>2.11</td>
 </tr>
 </tbody>
 </table>
@@ -287,18 +287,18 @@ AI Generated Summary
 <tbody>
 <tr class="odd">
 <td>Inner Join</td>
-<td>1.69</td>
-<td>1.80</td>
+<td>1.72</td>
+<td>1.36</td>
 </tr>
 <tr class="even">
 <td>Union All</td>
-<td>1.15</td>
-<td>1.11</td>
+<td>6.51</td>
+<td>21.43</td>
 </tr>
 <tr class="odd">
 <td>Filter</td>
-<td>13.04</td>
-<td>32.00</td>
+<td>2.29</td>
+<td>3.52</td>
 </tr>
 </tbody>
 </table>
@@ -349,43 +349,43 @@ AI Generated Summary
 <td><strong>Read CSV</strong></td>
 <td><code>df = pd.read_csv("data.csv")</code></td>
 <td><code>df = pl.read_csv("data.csv")</code></td>
-<td>16.35</td>
+<td>17.81</td>
 </tr>
 <tr class="even">
 <td><strong>Write CSV</strong></td>
 <td><code>df.to_csv("out.csv")</code></td>
 <td><code>df.write_csv("out.csv")</code></td>
-<td>31.49</td>
+<td>32.04</td>
 </tr>
 <tr class="odd">
 <td><strong>Constructor</strong></td>
 <td><code>df = pd.DataFrame(data)</code></td>
 <td><code>df = pl.DataFrame(data)</code></td>
-<td>3.36</td>
+<td>3.43</td>
 </tr>
 <tr class="even">
 <td><strong>Group By</strong></td>
 <td><code>df.groupby("col")["value"].mean()</code></td>
 <td><code>df.groupby("col").agg(pl.col("value").mean())</code></td>
-<td>10.64</td>
+<td>10.58</td>
 </tr>
 <tr class="odd">
 <td><strong>Inner Join</strong></td>
 <td><code>df1.merge(df2, on="id", how="inner")</code></td>
 <td><code>df1.join(df2, on="id", how="inner")</code></td>
-<td>1.69</td>
+<td>1.72</td>
 </tr>
 <tr class="even">
 <td><strong>Union All</strong></td>
 <td><code>pd.concat([df1, df2], ignore_index=True)</code></td>
 <td><code>df1.vstack(df2)</code></td>
-<td>1.15</td>
+<td>6.51</td>
 </tr>
 <tr class="odd">
 <td><strong>Filter</strong></td>
 <td><code>df[df["value"] &gt; 10]</code></td>
 <td><code>df.filter(pl.col("value") &gt; 10)</code></td>
-<td>13.04</td>
+<td>2.29</td>
 </tr>
 </tbody>
 </table>
