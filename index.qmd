@@ -1,7 +1,6 @@
 ---
 title: "Why I Switched to Polars From Pandas"
 subtitle: "Benchmarking Polars vs Pandas DataFrames"
-description: "Why Polars is faster and more efficient than pandas for data analysis."
 image: "https://rzaliznyak-math.github.io/why-switch-to-polars/assets/rose.png"
 author: "Russ Zaliznyak <[rzaliznyak@gmail.com](mailto:rzaliznyak@gmail.com)>"
 date: "2025-10-20"

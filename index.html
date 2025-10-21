@@ -8,7 +8,6 @@
 
 <meta name="author" content="Russ Zaliznyak <rzaliznyak@gmail.com>">
 <meta name="dcterms.date" content="2025-10-20">
-<meta name="description" content="Why Polars is faster and more efficient than pandas for data analysis.">
 
 <title>Why I Switched to Polars From Pandas</title>
 <style>
@@ -99,11 +98,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p class="subtitle lead">Benchmarking Polars vs Pandas DataFrames</p>
 </div>
 
-<div>
-  <div class="description">
-    Why Polars is faster and more efficient than pandas for data analysis.
-  </div>
-</div>
 
 
 <div class="quarto-title-meta">
@@ -187,13 +181,13 @@ Methodology
 <tbody>
 <tr class="odd">
 <td>Read</td>
-<td>16.38</td>
-<td>2.20</td>
+<td>17.05</td>
+<td>2.70</td>
 </tr>
 <tr class="even">
 <td>Write</td>
-<td>28.54</td>
-<td>6.76</td>
+<td>30.84</td>
+<td>1.32</td>
 </tr>
 </tbody>
 </table>
@@ -216,7 +210,7 @@ AI Generated Summary
 </section>
 <section id="construct-pivot" class="level1">
 <h1>Construct | Pivot</h1>
-<div id="871b7b6b" class="cell" data-execution_count="8">
+<div id="f4c7ac95" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Simulate Dataset</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -252,13 +246,13 @@ AI Generated Summary
 <tbody>
 <tr class="odd">
 <td>Constructor</td>
-<td>3.52</td>
-<td>0.07</td>
+<td>3.46</td>
+<td>0.09</td>
 </tr>
 <tr class="even">
 <td>Group By</td>
-<td>11.03</td>
-<td>1.90</td>
+<td>10.29</td>
+<td>1.35</td>
 </tr>
 </tbody>
 </table>
@@ -293,18 +287,18 @@ AI Generated Summary
 <tbody>
 <tr class="odd">
 <td>Inner Join</td>
-<td>15.89</td>
-<td>23.19</td>
+<td>11.66</td>
+<td>9.55</td>
 </tr>
 <tr class="even">
 <td>Union All</td>
-<td>8.16</td>
-<td>9.80</td>
+<td>4.81</td>
+<td>5.04</td>
 </tr>
 <tr class="odd">
 <td>Filter</td>
-<td>1.91</td>
-<td>1.31</td>
+<td>0.82</td>
+<td>0.73</td>
 </tr>
 </tbody>
 </table>
@@ -355,43 +349,43 @@ AI Generated Summary
 <td><strong>Read CSV</strong></td>
 <td><code>df = pd.read_csv("data.csv")</code></td>
 <td><code>df = pl.read_csv("data.csv")</code></td>
-<td>16.38</td>
+<td>17.05</td>
 </tr>
 <tr class="even">
 <td><strong>Write CSV</strong></td>
 <td><code>df.to_csv("out.csv")</code></td>
 <td><code>df.write_csv("out.csv")</code></td>
-<td>28.54</td>
+<td>30.84</td>
 </tr>
 <tr class="odd">
 <td><strong>Constructor</strong></td>
 <td><code>df = pd.DataFrame(data)</code></td>
 <td><code>df = pl.DataFrame(data)</code></td>
-<td>3.52</td>
+<td>3.46</td>
 </tr>
 <tr class="even">
 <td><strong>Group By</strong></td>
 <td><code>df.groupby("col")["value"].mean()</code></td>
 <td><code>df.groupby("col").agg(pl.col("value").mean())</code></td>
-<td>11.03</td>
+<td>10.29</td>
 </tr>
 <tr class="odd">
 <td><strong>Inner Join</strong></td>
 <td><code>df1.merge(df2, on="id", how="inner")</code></td>
 <td><code>df1.join(df2, on="id", how="inner")</code></td>
-<td>15.89</td>
+<td>11.66</td>
 </tr>
 <tr class="even">
 <td><strong>Union All</strong></td>
 <td><code>pd.concat([df1, df2], ignore_index=True)</code></td>
 <td><code>df1.vstack(df2)</code></td>
-<td>8.16</td>
+<td>4.81</td>
 </tr>
 <tr class="odd">
 <td><strong>Filter</strong></td>
 <td><code>df[df["value"] &gt; 10]</code></td>
 <td><code>df.filter(pl.col("value") &gt; 10)</code></td>
-<td>1.91</td>
+<td>0.82</td>
 </tr>
 </tbody>
 </table>
