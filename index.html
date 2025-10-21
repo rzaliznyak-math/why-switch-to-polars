@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Russ Zaliznyak <rzaliznyak@gmail.com>">
-<meta name="dcterms.date" content="2025-10-20">
+<meta name="dcterms.date" content="2025-10-21">
 
 <title>Why I Switched to Polars From Pandas</title>
 <style>
@@ -112,7 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 20, 2025</p>
+      <p class="date">October 21, 2025</p>
     </div>
   </div>
   
@@ -127,10 +127,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><img src="./assets/rose.png" style="max-width: 80%; border: 1px solid #aaa; border-radius: 4px;"></p>
 <section id="tldr" class="level1">
 <h1>TL/DR;</h1>
-<p>If you use <strong><code>Pandas</code></strong> dataframes to store and analyze large datasets, consider making a change to <strong><code>Polars</code></strong>.</p>
-<p>I use <em>dataframes</em> because they allow me to think relationally — just like I do when I write SQL. I use them extensively in virtually all of my work; app development, exploratory data analysis, and summarizing large datasets.</p>
-<p>My colleague Joseph Powers, PhD, introduced me to <strong><code>Polars</code></strong> — claiming it offers big runtime savings over <strong><code>Pandas</code></strong>. I scoffed, but soon enough, processing pandas DFs became such a bottleneck that I had no choice but to switch.</p>
-<p>Check out below the benchmarks I measured for typical dataframe operations like read, write, construct, and group by. These will convince you that a change is necessary.</p>
+<p>If you use <strong><code>Pandas</code></strong> DataFrames to store and analyze large datasets, consider making a change to <strong><code>Polars</code></strong>.</p>
+<p>I use <em>DataFrames</em> because they allow me to think relationally — just like I do when I write SQL. I use them extensively in virtually all of my work; app development, exploratory data analysis, and summarizing large datasets.</p>
+<p>Check out below the benchmarks I measured for typical DataFrame operations like read, write, construct, and group by. These will convince you that a change is necessary.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="System &amp; Environment">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -181,13 +180,13 @@ Methodology
 <tbody>
 <tr class="odd">
 <td>Read</td>
-<td>17.81</td>
-<td>2.23</td>
+<td>16.79</td>
+<td>3.57</td>
 </tr>
 <tr class="even">
 <td>Write</td>
-<td>32.04</td>
-<td>4.43</td>
+<td>30.74</td>
+<td>5.32</td>
 </tr>
 </tbody>
 </table>
@@ -203,14 +202,14 @@ AI Generated Summary
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
-<p>Polars is faster at reading and writing CSVs than pandas because it’s built in Rust with parallelized, memory-efficient algorithms that fully utilize multiple CPU cores.</p>
+<p>Polars is faster at reading and writing CSVs than Pandas because it’s built in Rust with parallelized, memory-efficient algorithms that fully utilize multiple CPU cores.</p>
 </div>
 </div>
 </div>
 </section>
 <section id="construct-pivot" class="level1">
 <h1>Construct | Pivot</h1>
-<div id="91849850" class="cell" data-execution_count="9">
+<div id="6372490c" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Simulate Dataset</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -246,13 +245,13 @@ AI Generated Summary
 <tbody>
 <tr class="odd">
 <td>Constructor</td>
-<td>3.43</td>
-<td>0.33</td>
+<td>3.41</td>
+<td>0.43</td>
 </tr>
 <tr class="even">
 <td>Group By</td>
-<td>10.58</td>
-<td>2.11</td>
+<td>10.18</td>
+<td>1.58</td>
 </tr>
 </tbody>
 </table>
@@ -268,8 +267,8 @@ AI Generated Summary
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
-<p><strong>Constructor:</strong> Polars DataFrame constructor is faster than pandas because it uses Rust’s zero-copy memory model and parallel data parsing, avoiding Python’s object overhead.</p>
-<p><strong>Pivot Tables:</strong> Polars outperforms pandas in pivot table operations by executing grouped aggregations in parallel and leveraging an optimized query engine built on Apache Arrow for efficient columnar computation.</p>
+<p><strong>Constructor:</strong> Polars DataFrame constructor is faster than Pandas because it uses Rust’s zero-copy memory model and parallel data parsing, avoiding Python’s object overhead.</p>
+<p><strong>Pivot Tables:</strong> Polars outperforms Pandas in pivot table operations by executing grouped aggregations in parallel and leveraging an optimized query engine built on Apache Arrow for efficient columnar computation.</p>
 </div>
 </div>
 </div>
@@ -287,18 +286,18 @@ AI Generated Summary
 <tbody>
 <tr class="odd">
 <td>Inner Join</td>
-<td>1.72</td>
-<td>1.36</td>
+<td>1.71</td>
+<td>1.19</td>
 </tr>
 <tr class="even">
 <td>Union All</td>
-<td>6.51</td>
-<td>21.43</td>
+<td>8.91</td>
+<td>16.02</td>
 </tr>
 <tr class="odd">
 <td>Filter</td>
-<td>2.29</td>
-<td>3.52</td>
+<td>2.38</td>
+<td>1.46</td>
 </tr>
 </tbody>
 </table>
@@ -315,15 +314,16 @@ AI Generated Summary
 </div>
 <div id="callout-5" class="callout-5-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
-<p><strong>Joins (Inner + Union All):</strong> Polars performs joins faster than pandas by using parallelized hash join algorithms implemented in Rust and operating directly on Arrow memory, minimizing copying and serialization overhead.</p>
-<p><strong>Filter Clauses:</strong> Polars evaluates filter expressions lazily and in parallel at the columnar level, enabling vectorized, cache-efficient filtering that significantly outpaces pandas’ row-wise execution in Python.</p>
+<p><strong>Joins (Inner + Union All):</strong> Polars performs joins faster than Pandas by using parallelized hash join algorithms implemented in Rust and operating directly on Arrow memory, minimizing copying and serialization overhead.</p>
+<p><strong>Filter Clauses:</strong> Polars evaluates filter expressions lazily and in parallel at the columnar level, enabling vectorized, cache-efficient filtering that significantly outpaces Pandas’ row-wise execution in Python.</p>
 </div>
 </div>
 </div>
 </section>
 <section id="conclusion" class="level1">
 <h1>Conclusion</h1>
-<p>Across the board <code>Polars</code> is faster at all of the typical dataframe operations we tested. The syntax differences are minimal and AI can quickly convert your <code>Pandas</code> code. Make this transition and speed up your work!</p>
+<p>Across the board <code>Polars</code> is faster at all of the typical DataFrame operations we tested. The syntax differences are minimal and AI can quickly convert your <code>Pandas</code> code.</p>
+<p>If you work with large DataFrames, Polars is worth the 30-minute migration — faster runtimes, smaller memory footprint, and minimal code changes.</p>
 </section>
 <section id="code-references" class="level1">
 <h1>Code References</h1>
@@ -349,43 +349,43 @@ AI Generated Summary
 <td><strong>Read CSV</strong></td>
 <td><code>df = pd.read_csv("data.csv")</code></td>
 <td><code>df = pl.read_csv("data.csv")</code></td>
-<td>17.81</td>
+<td>16.79</td>
 </tr>
 <tr class="even">
 <td><strong>Write CSV</strong></td>
 <td><code>df.to_csv("out.csv")</code></td>
 <td><code>df.write_csv("out.csv")</code></td>
-<td>32.04</td>
+<td>30.74</td>
 </tr>
 <tr class="odd">
 <td><strong>Constructor</strong></td>
 <td><code>df = pd.DataFrame(data)</code></td>
 <td><code>df = pl.DataFrame(data)</code></td>
-<td>3.43</td>
+<td>3.41</td>
 </tr>
 <tr class="even">
 <td><strong>Group By</strong></td>
 <td><code>df.groupby("col")["value"].mean()</code></td>
 <td><code>df.groupby("col").agg(pl.col("value").mean())</code></td>
-<td>10.58</td>
+<td>10.18</td>
 </tr>
 <tr class="odd">
 <td><strong>Inner Join</strong></td>
 <td><code>df1.merge(df2, on="id", how="inner")</code></td>
 <td><code>df1.join(df2, on="id", how="inner")</code></td>
-<td>1.72</td>
+<td>1.71</td>
 </tr>
 <tr class="even">
 <td><strong>Union All</strong></td>
 <td><code>pd.concat([df1, df2], ignore_index=True)</code></td>
 <td><code>df1.vstack(df2)</code></td>
-<td>6.51</td>
+<td>8.91</td>
 </tr>
 <tr class="odd">
 <td><strong>Filter</strong></td>
 <td><code>df[df["value"] &gt; 10]</code></td>
 <td><code>df.filter(pl.col("value") &gt; 10)</code></td>
-<td>2.29</td>
+<td>2.38</td>
 </tr>
 </tbody>
 </table>

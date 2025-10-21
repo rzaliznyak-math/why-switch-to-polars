@@ -2,7 +2,7 @@
 title: "Why I Switched to Polars From Pandas"
 subtitle: "Benchmarking Polars vs Pandas DataFrames"
 author: "Russ Zaliznyak <[rzaliznyak@gmail.com](mailto:rzaliznyak@gmail.com)>"
-date: "2025-10-20"
+date: "2025-10-21"
 execute: 
   echo: false
 format: 
@@ -15,19 +15,19 @@ format:
 
 
 ```{python}
-NUMBER_SIMULATIONS = int(2e3)
+NUMBER_SIMULATIONS = int(1e3)
 ```
 
 <img src="./assets/rose.png"  style="max-width: 80%; border: 1px solid #aaa; border-radius: 4px;" />
 
 # TL/DR;
 
-If you use **`Pandas`** dataframes to store and analyze large datasets, consider making a change to **`Polars`**.
+If you use **`Pandas`** DataFrames to store and analyze large datasets, consider making a change to **`Polars`**.
 
-I use _dataframes_ because they allow me to think relationally --- just like I do when I write SQL.
+I use _DataFrames_ because they allow me to think relationally --- just like I do when I write SQL.
 I use them extensively in virtually all of my work; app development, exploratory data analysis, and summarizing large datasets.
 
-Check out below the benchmarks I measured for typical dataframe operations like read, write, construct, and group by. These will convince you that a change is necessary.
+Check out below the benchmarks I measured for typical DataFrame operations like read, write, construct, and group by. These will convince you that a change is necessary.
 
 
 
@@ -76,7 +76,7 @@ import pandas as pd
 all_panda_read_times = []
 all_panda_read_times = [default_timer()]
 for j in range(NUMBER_SIMULATIONS):
-    df_pandas = pd.read_csv(file_location)
+    df_Pandas = pd.read_csv(file_location)
     all_panda_read_times.append(default_timer())
 
 all_panda_read_times = diff(all_panda_read_times)
@@ -108,7 +108,7 @@ import pandas as pd
 
 all_panda_write_times = [default_timer()]
 for j in range(NUMBER_SIMULATIONS):
-    df_pandas.to_csv("temp.csv")
+    df_Pandas.to_csv("temp.csv")
     all_panda_write_times.append(default_timer())
 
 all_panda_write_times = diff(all_panda_write_times)
@@ -191,7 +191,7 @@ pass
 
 
 ::: {.callout-tip collapse="false" title="AI Generated Summary"}
-Polars is faster at reading and writing CSVs than pandas because it’s built in Rust with parallelized, memory-efficient algorithms that fully utilize multiple CPU cores.
+Polars is faster at reading and writing CSVs than Pandas because it’s built in Rust with parallelized, memory-efficient algorithms that fully utilize multiple CPU cores.
 :::
 
 
@@ -232,7 +232,7 @@ import pandas as pd
 
 all_panda_constructor_times = [default_timer()]
 for j in range(NUMBER_SIMULATIONS):
-    df_pandas = pd.DataFrame.from_dict(data)
+    df_Pandas = pd.DataFrame.from_dict(data)
     all_panda_constructor_times.append(default_timer())
 
 all_panda_constructor_times = diff(all_panda_constructor_times)
@@ -293,7 +293,7 @@ import pandas as pd
 all_panda_groupby_times = [default_timer()]
 for j in range(NUMBER_SIMULATIONS):
     result = (
-    df_pandas.groupby("category")
+    df_Pandas.groupby("category")
       .agg(
           count=("score", "size"),   # count(*) number of rows
           avg_score=("score", "mean")
@@ -365,9 +365,9 @@ pass
 
 
 ::: {.callout-tip collapse="false" title="AI Generated Summary"}
-**Constructor:** Polars DataFrame constructor is faster than pandas because it uses Rust’s zero-copy memory model and parallel data parsing, avoiding Python’s object overhead.  
+**Constructor:** Polars DataFrame constructor is faster than Pandas because it uses Rust’s zero-copy memory model and parallel data parsing, avoiding Python’s object overhead.  
 
-**Pivot Tables:** Polars outperforms pandas in pivot table operations by executing grouped aggregations in parallel and leveraging an optimized query engine built on Apache Arrow for efficient columnar computation.
+**Pivot Tables:** Polars outperforms Pandas in pivot table operations by executing grouped aggregations in parallel and leveraging an optimized query engine built on Apache Arrow for efficient columnar computation.
 
 :::
 
@@ -588,9 +588,9 @@ pass
 
 ::: {.callout-tip collapse="false" title="AI Generated Summary"}
 
-**Joins (Inner + Union All):** Polars performs joins faster than pandas by using parallelized hash join algorithms implemented in Rust and operating directly on Arrow memory, minimizing copying and serialization overhead.  
+**Joins (Inner + Union All):** Polars performs joins faster than Pandas by using parallelized hash join algorithms implemented in Rust and operating directly on Arrow memory, minimizing copying and serialization overhead.  
 
-**Filter Clauses:** Polars evaluates filter expressions lazily and in parallel at the columnar level, enabling vectorized, cache-efficient filtering that significantly outpaces pandas’ row-wise execution in Python.
+**Filter Clauses:** Polars evaluates filter expressions lazily and in parallel at the columnar level, enabling vectorized, cache-efficient filtering that significantly outpaces Pandas’ row-wise execution in Python.
 
 :::
 
@@ -598,7 +598,9 @@ pass
 # Conclusion
 
 
-Across the board `Polars` is faster at all of the typical dataframe operations we tested. The syntax differences are minimal and AI can quickly convert your `Pandas` code. Make this transition and speed up your work!
+Across the board `Polars` is faster at all of the typical DataFrame operations we tested. The syntax differences are minimal and AI can quickly convert your `Pandas` code.
+
+If you work with large DataFrames, Polars is worth the 30-minute migration — faster runtimes, smaller memory footprint, and minimal code changes.
 
 
 
