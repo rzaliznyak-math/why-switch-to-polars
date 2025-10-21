@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Russ Zaliznyak <rzaliznyak@gmail.com>">
-<meta name="dcterms.date" content="2025-10-14">
+<meta name="dcterms.date" content="2025-10-20">
 
-<title>Why I’m Switching to Polars Away From Pandas</title>
+<title>Why I Switched to Polars From Pandas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -81,12 +81,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">TL/DR</a></li>
   <li><a href="#read-write" id="toc-read-write" class="nav-link" data-scroll-target="#read-write">Read | Write</a></li>
   <li><a href="#construct-pivot" id="toc-construct-pivot" class="nav-link" data-scroll-target="#construct-pivot">Construct | Pivot</a></li>
   <li><a href="#joins-filter" id="toc-joins-filter" class="nav-link" data-scroll-target="#joins-filter">Joins | Filter</a></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
-  <li><a href="#code-comparisons" id="toc-code-comparisons" class="nav-link" data-scroll-target="#code-comparisons">Code Comparisons</a></li>
+  <li><a href="#code-references" id="toc-code-references" class="nav-link" data-scroll-target="#code-references">Code References</a></li>
   </ul>
 </nav>
 </div>
@@ -94,8 +94,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Why I’m Switching to Polars Away From Pandas</h1>
-<p class="subtitle lead">Benchmarking Polars vs Pandas</p>
+<h1 class="title">Why I Switched to Polars From Pandas</h1>
+<p class="subtitle lead">Benchmarking Polars vs Pandas DataFrames</p>
 </div>
 
 
@@ -112,7 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 14, 2025</p>
+      <p class="date">October 20, 2025</p>
     </div>
   </div>
   
@@ -124,10 +124,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="introduction" class="level1">
-<h1>Introduction</h1>
-<p>Data scientists have long relied on Pandas for handling tabular data, but as datasets grow, its single-threaded design and memory overhead start to limit performance. Tasks that once took seconds can now take minutes, making large-scale analysis cumbersome.</p>
-<p>That’s what led me to explore Polars — a Rust-based, multi-threaded DataFrame library built on Apache Arrow. It promises faster computation and better scalability out of the box. To see how it performs in practice, I benchmarked Polars against Pandas on common data operations. The results convinced me it’s time to switch.</p>
+<p><img src="./assets/rose.png" style="max-width: 80%; border: 1px solid #aaa; border-radius: 4px;"></p>
+<section id="tldr" class="level1">
+<h1>TL/DR</h1>
+<p>If you use <strong><code>Pandas</code></strong> dataframes to store and analyze large datasets, consider making a change to <strong><code>Polars</code></strong>.</p>
+<p>I use <em>dataframes</em> because they allow me to think relationally — just like I do when I write SQL. I use them extensively in virtually all of my work; app development, exploratory data analysis, and summarizing large datasets.</p>
+<p>My colleague Joseph Powers, PhD, introduced me to <strong><code>Polars</code></strong> — claiming it offers big runtime savings over <strong><code>Pandas</code></strong>. I scoffed, but soon enough, processing pandas DFs became such a bottleneck that I had no choice but to switch.</p>
+<p>Check out below the benchmarks I measured for typical dataframe operations like read, write, construct, and group by. These will convince you that a change is necessary.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="System &amp; Environment">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -141,7 +144,7 @@ System &amp; Environment
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ul>
-<li>All benchmarks were run on a <strong>16-inch MacBook Pro (2021)</strong> equipped with an <strong>Apple M1 Max</strong> chip and <strong>64 GB of unified memory</strong>, running <strong>macOS Sonoma 14.7</strong>. <br><br></li>
+<li>All benchmarks ran on a <strong>16-inch MacBook Pro (2021)</strong> equipped with an <strong>Apple M1 Max</strong> chip and <strong>64 GB of unified memory</strong>, running <strong>macOS Sonoma 14.7</strong>. <br><br></li>
 <li>Tests used <strong>Python 3.10.9</strong>, with <strong>Pandas 1.5.3</strong> and <strong>Polars 1.33.0</strong> installed.</li>
 </ul>
 </div>
@@ -159,7 +162,7 @@ Methodology
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>I benchmarked <strong>Polars</strong> and <strong>Pandas</strong> across common DataFrame operations using both real and simulated data. <br><br> - For <strong>read</strong> and <strong>write</strong> tests, I used a <strong>10 MB CSV dataset</strong> from the <a href="https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/csv/10mb.csv">Frictionless Data repository</a>. <br> - For <strong>constructor</strong>, <strong>pivot</strong>, <strong>join</strong>, and <strong>filter</strong> benchmarks, I generated a <strong>simulated dataset</strong> to ensure consistent structure and reproducibility. <br> - Each operation was executed <strong>5,000 times</strong> per library, and the <strong>mean execution time</strong> was recorded.</p>
+<p>I benchmarked <strong>Polars</strong> and <strong>Pandas</strong> across common DataFrame operations using both real and simulated data. <br><br> - For <strong>read</strong> and <strong>write</strong> tests, I used a <strong>10 MB CSV dataset</strong> from the <a href="https://raw.githubusercontent.com/frictionlessdata/datasets/main/files/csv/10mb.csv">Frictionless Data repository</a>. <br> - For <strong>constructor</strong>, <strong>pivot</strong>, <strong>join</strong>, and <strong>filter</strong> benchmarks, I generated a <strong>simulated dataset</strong> to ensure consistent structure and reproducibility. <br> - Each operation was executed <strong>1,000 times</strong> per library, and the <strong>mean execution time</strong> was recorded.</p>
 </div>
 </div>
 </div>
@@ -172,27 +175,42 @@ Methodology
 <tr class="header">
 <th>Metric</th>
 <th>Mean Speed Increase</th>
-<th>Standard Error</th>
+<th>Standard Deviation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Read</td>
-<td>18.97</td>
-<td>0.04</td>
+<td>18.03</td>
+<td>1.51</td>
 </tr>
 <tr class="even">
 <td>Write</td>
-<td>34.59</td>
-<td>0.18</td>
+<td>30.88</td>
+<td>1.07</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Summary</strong>: Polars can read and write CSVs many times faster than Pandas while using less memory and CPU per operation, making it ideal for medium-to-large datasets or repeated batch processing.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="AI Generated Summary">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+AI Generated Summary
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>Polars is faster at reading and writing CSVs than pandas because it’s built in Rust with parallelized, memory-efficient algorithms that fully utilize multiple CPU cores.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="construct-pivot" class="level1">
 <h1>Construct | Pivot</h1>
-<div id="54e95882" class="cell" data-execution_count="8">
+<div id="af8a3344" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Simulate Dataset</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -222,23 +240,39 @@ Methodology
 <tr class="header">
 <th>Metric</th>
 <th>Mean Speed Increase</th>
-<th>Standard Error</th>
+<th>Standard Deviation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Constructor</td>
-<td>3.43</td>
-<td>0.00</td>
+<td>3.38</td>
+<td>0.05</td>
 </tr>
 <tr class="even">
 <td>Group By</td>
-<td>9.56</td>
-<td>0.02</td>
+<td>11.24</td>
+<td>2.24</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Summary</strong>: Polars constructs and reshapes large datasets more quickly and efficiently by taking full advantage of multi-core CPUs and low-level optimizations that Pandas lacks</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="AI Generated Summary">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+AI Generated Summary
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p><strong>Constructor:</strong> Polars DataFrame constructor is faster than pandas because it uses Rust’s zero-copy memory model and parallel data parsing, avoiding Python’s object overhead.</p>
+<p><strong>Pivot Tables:</strong> Polars outperforms pandas in pivot table operations by executing grouped aggregations in parallel and leveraging an optimized query engine built on Apache Arrow for efficient columnar computation.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="joins-filter" class="level1">
 <h1>Joins | Filter</h1>
@@ -247,49 +281,67 @@ Methodology
 <tr class="header">
 <th>Metric</th>
 <th>Mean Speed Increase</th>
-<th>Standard Error</th>
+<th>Standard Deviation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Inner Join</td>
-<td>1.59</td>
-<td>0.01</td>
+<td>9.17</td>
+<td>5.67</td>
 </tr>
 <tr class="even">
 <td>Union All</td>
-<td>1.88</td>
-<td>0.06</td>
+<td>5.51</td>
+<td>5.43</td>
 </tr>
 <tr class="odd">
 <td>Filter</td>
-<td>1.90</td>
-<td>0.04</td>
+<td>1.02</td>
+<td>1.13</td>
 </tr>
 </tbody>
 </table>
 <p><br></p>
-<p><strong>Summary</strong>: Polars handles joins and filters faster and more efficiently by parallelizing work and minimizing Python-level overhead — making it ideal for high-volume or complex data transformations.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="AI Generated Summary">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+AI Generated Summary
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p><strong>Joins (Inner + Union All):</strong> Polars performs joins faster than pandas by using parallelized hash join algorithms implemented in Rust and operating directly on Arrow memory, minimizing copying and serialization overhead.</p>
+<p><strong>Filter Clauses:</strong> Polars evaluates filter expressions lazily and in parallel at the columnar level, enabling vectorized, cache-efficient filtering that significantly outpaces pandas’ row-wise execution in Python.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="conclusion" class="level1">
 <h1>Conclusion</h1>
-<p>As a data scientist, my goal is to explore and transform data quickly without fighting performance limits. Polars delivers that speed and efficiency out of the box — it loads data faster, executes transformations in parallel, and scales as datasets grow.</p>
-<p>While Pandas remains great for lightweight analysis, Polars is simply better suited for large-scale workflows where time and memory efficiency matter. After benchmarking both, I’m convinced: Polars lets me spend less time waiting and more time analyzing.</p>
+<p>Across the board <code>Polars</code> is faster at all of the typical dataframe operations we tested. The syntax differences are minimal and AI can quickly convert your <code>Pandas</code> code. Make this transition and speed up your work!</p>
 </section>
-<section id="code-comparisons" class="level1">
-<h1>Code Comparisons</h1>
+<section id="code-references" class="level1">
+<h1>Code References</h1>
+<div style="margin-top: -15px; font-size: 90%;">
 <div class="table-responsive">
 <table class="caption-top table">
 <colgroup>
-<col style="width: 23%">
-<col style="width: 38%">
-<col style="width: 38%">
+<col style="width: 16%">
+<col style="width: 26%">
+<col style="width: 26%">
+<col style="width: 30%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Operation</th>
 <th><strong>Pandas Example</strong></th>
 <th><strong>Polars Example</strong></th>
+<th><strong>Times Faster</strong></th>
 </tr>
 </thead>
 <tbody>
@@ -297,39 +349,80 @@ Methodology
 <td><strong>Read CSV</strong></td>
 <td><code>df = pd.read_csv("data.csv")</code></td>
 <td><code>df = pl.read_csv("data.csv")</code></td>
+<td>18.03</td>
 </tr>
 <tr class="even">
 <td><strong>Write CSV</strong></td>
 <td><code>df.to_csv("out.csv")</code></td>
 <td><code>df.write_csv("out.csv")</code></td>
+<td>30.88</td>
 </tr>
 <tr class="odd">
 <td><strong>Constructor</strong></td>
 <td><code>df = pd.DataFrame(data)</code></td>
 <td><code>df = pl.DataFrame(data)</code></td>
+<td>3.38</td>
 </tr>
 <tr class="even">
 <td><strong>Group By</strong></td>
 <td><code>df.groupby("col")["value"].mean()</code></td>
 <td><code>df.groupby("col").agg(pl.col("value").mean())</code></td>
+<td>11.24</td>
 </tr>
 <tr class="odd">
 <td><strong>Inner Join</strong></td>
 <td><code>df1.merge(df2, on="id", how="inner")</code></td>
 <td><code>df1.join(df2, on="id", how="inner")</code></td>
+<td>9.17</td>
 </tr>
 <tr class="even">
 <td><strong>Union All</strong></td>
 <td><code>pd.concat([df1, df2], ignore_index=True)</code></td>
 <td><code>df1.vstack(df2)</code></td>
+<td>5.51</td>
 </tr>
 <tr class="odd">
 <td><strong>Filter</strong></td>
 <td><code>df[df["value"] &gt; 10]</code></td>
 <td><code>df.filter(pl.col("value") &gt; 10)</code></td>
+<td>1.02</td>
 </tr>
 </tbody>
 </table>
+</div>
+<p>*** <em>Results will vary depending on machine and size/structure of your datasets.</em></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="**AI Generated Summary**: Why Union All Has High Variance ">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<strong>AI Generated Summary</strong>: Why Union All Has High Variance
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Polars’ <code>pl.concat()</code> (or <code>vstack()</code>) uses <strong>multi-threaded Arrow buffer operations</strong> that cut average runtime but introduce <strong>non-deterministic variance</strong>. On macOS with M1 Max chips, the OS may schedule threads differently across performance and efficiency cores, causing some runs to finish faster or slower. In short, <strong>parallelism improves mean speed but naturally increases variance</strong>—explaining the wider spread in the “Union All” benchmark.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="**AI Generated Summary**: Why Constructor is Reliably Faster ">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<strong>AI Generated Summary</strong>: Why Constructor is Reliably Faster
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The constructor benchmark is the most reliable because it’s a <strong>pure in-memory, CPU-bound operation</strong> with no I/O, threading, or garbage collection noise. Each run follows the same predictable memory layout, making it a clean measure of Polars’ and Pandas’ internal efficiency without interference from system variability.</p>
+</div>
+</div>
 </div>
 </section>
 
